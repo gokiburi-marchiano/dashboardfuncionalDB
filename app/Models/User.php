@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+// use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -10,30 +11,44 @@ class User extends Authenticatable
 {
     use HasFactory, Notifiable;
 
-    protected $fillable = ['name', 'rut', 'password'];
+    /**
+     * The attributes that are mass assignable.
+     *
+     * @var array<int, string>
+     */
+    protected $fillable = [
+        'name',
+        'rut',
+        'email',
+        'password',
+        'apellido_paterno',
+        'apellido_materno',
+        'telefono',
+        'direccion',
+        'cargo',
+        'unidad',
+    ];
 
-    protected $hidden = ['password', 'remember_token'];
+    /**
+     * The attributes that should be hidden for serialization.
+     *
+     * @var array<int, string>
+     */
+    protected $hidden = [
+        'password',
+        'remember_token',
+    ];
 
-    // ESTO ES VITAL: Laravel usa 'rut' para buscar el nombre de la columna
-    public function getAuthIdentifierName()
-    {
-        return 'rut';
-    }
-
-    // ESTO ES NUEVO: Asegura que el valor del RUT sea lo que se guarde en la sesión
-    public function getAuthIdentifier()
-    {
-        return $this->attributes['rut'];
-    }
-
+    /**
+     * Get the attributes that should be cast.
+     *
+     * @return array<string, string>
+     */
     protected function casts(): array
     {
-        return ['password' => 'hashed'];
-    }
-
-    // Limpia el RUT antes de guardar para que no haya choques de formato
-    public function setRutAttribute($value)
-    {
-        $this->attributes['rut'] = str_replace(['.', ' '], '', $value);
+        return [
+            'email_verified_at' => 'datetime',
+            'password' => 'hashed',
+        ];
     }
 }

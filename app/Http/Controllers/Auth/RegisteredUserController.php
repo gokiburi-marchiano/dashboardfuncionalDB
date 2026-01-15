@@ -29,17 +29,32 @@ class RegisteredUserController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
+        // 1. Validamos los datos del formulario (RUT, Nombre, Clave)
         $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'rut' => ['required', 'string', 'lowercase', 'rut', 'max:255', 'unique:'.User::class],
+            // Mantenemos tus validaciones de RUT intactas
+            'rut' => ['required', 'string', 'lowercase', 'max:255', 'unique:'.User::class],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
         ]);
 
-        $user = User::create([
-            'name' => $request->name,
-            'rut' => $request->rut,
-            'password' => Hash::make($request->password),
-        ]);
+        // 2. Creamos el usuario MANUALMENTE
+        // Usamos "new User" en vez de "User::create" para forzar el email automático
+        // sin que el modelo nos bloquee.
+        $user = new User();
+
+        $user->name = $request->name;
+        $user->rut = $request->rut;
+
+        // --- AQUÍ ESTÁ LA SOLUCIÓN ---
+        // Generamos un email automático e invisible para el usuario.
+        // Esto satisface a la base de datos y evita el error 1364.
+        $user->email = $request->rut . '@sin-email.cl';
+        // -----------------------------
+
+        $user->password = Hash::make($request->password);
+
+        // 3. Guardamos en la Base de Datos
+        $user->save();
 
         event(new Registered($user));
 

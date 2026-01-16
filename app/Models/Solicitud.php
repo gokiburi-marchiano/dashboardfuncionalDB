@@ -20,10 +20,16 @@ class Solicitud extends Model
         'descripcion',
         'estado',
         'archivo_path',
+        'observacion_admin',
     ];
 
     public function user()
     {
         return $this->belongsTo(User::class, 'user_id');
+    }
+
+    public function historial()
+    {
+        return $this->hasMany(SolicitudHistorial::class)->orderBy('created_at', 'desc');
     }
 }

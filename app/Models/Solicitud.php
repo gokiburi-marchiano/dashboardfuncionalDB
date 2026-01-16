@@ -19,7 +19,6 @@ class Solicitud extends Model
         'departamento',
         'descripcion',
         'estado',
-        'archivo_path',
         'observacion_admin',
     ];
 
@@ -31,5 +30,10 @@ class Solicitud extends Model
     public function historial()
     {
         return $this->hasMany(SolicitudHistorial::class)->orderBy('created_at', 'desc');
+    }
+
+    public function archivos()
+    {
+        return $this->hasMany(SolicitudArchivo::class);
     }
 }

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Solicitud;
+use App\Models\SolicitudArchivo;
 use App\Models\SolicitudHistorial;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -13,8 +14,10 @@ class SolicitudController extends Controller
     public function index()
     {
         $solicitudes = Solicitud::where('user_id', Auth::id())
-                        ->orderBy('created_at', 'desc')
-                        ->get();
+            ->with('archivos')
+            ->orderBy('created_at', 'desc')
+            ->get();
+
         return view('solicitudes.index', compact('solicitudes'));
     }
 
@@ -26,37 +29,47 @@ class SolicitudController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'titulo' => 'required|string|max:255',
+            'titulo'       => 'required|string|max:255',
             'departamento' => 'required|string',
-            'descripcion' => 'nullable|string',
-            'archivo' => 'nullable|file|mimes:pdf,doc,docx,jpg,png,jpeg|max:10240',
+            'descripcion'  => 'nullable|string',
+            'archivos'     => 'array|max:10',
+            'archivos.*'   => 'file|mimes:pdf,doc,docx,jpg,png,jpeg|max:10240',
         ]);
 
-        $rutaArchivo = null;
-        if ($request->hasFile('archivo')) {
-            $rutaArchivo = $request->file('archivo')->store('solicitudes', 'public');
-        }
-
-        Solicitud::create([
+        $solicitud = Solicitud::create([
             'user_id'      => Auth::id(),
             'user_rut'     => Auth::user()->rut,
             'titulo'       => $request->titulo,
             'tipo'         => $request->titulo,
             'departamento' => $request->departamento,
             'descripcion'  => $request->descripcion,
-            'archivo_path' => $rutaArchivo,
             'estado'       => 'Pendiente',
         ]);
 
-        return redirect()->route('solicitudes.index');
+        if ($request->hasFile('archivos')) {
+            foreach ($request->file('archivos') as $archivo) {
+
+                $ruta = $archivo->store('solicitudes', 'public');
+
+                SolicitudArchivo::create([
+                    // ESTA ERA LA CAUSA DEL ERROR, AHORA ESTÁ CORREGIDO:
+                    'solicitud_id'  => $solicitud->id,
+                    'file_path'     => $ruta,
+                    'original_name' => $archivo->getClientOriginalName(),
+                    'mime_type'     => $archivo->getClientMimeType(),
+                ]);
+            }
+        }
+
+        return redirect()->route('solicitudes.index')->with('status', 'Solicitud creada exitosamente.');
     }
 
     public function show($id)
     {
         if (Auth::user()->role === 'admin') {
-            $solicitud = Solicitud::findOrFail($id);
+            $solicitud = Solicitud::with('archivos')->findOrFail($id);
         } else {
-            $solicitud = Solicitud::where('user_id', Auth::id())->findOrFail($id);
+            $solicitud = Solicitud::with('archivos')->where('user_id', Auth::id())->findOrFail($id);
         }
 
         return view('solicitudes.show', compact('solicitud'));
@@ -71,27 +84,38 @@ class SolicitudController extends Controller
         }
 
         $request->validate([
-            'nuevo_archivo' => 'required|file|mimes:pdf,doc,docx,jpg,png,jpeg|max:10240',
+            'nuevos_archivos'   => 'required|array|max:5',
+            'nuevos_archivos.*' => 'file|mimes:pdf,doc,docx,jpg,png,jpeg|max:10240',
         ]);
 
-        if ($request->hasFile('nuevo_archivo')) {
-            $rutaAnterior = $solicitud->archivo_path;
+        if ($request->hasFile('nuevos_archivos')) {
 
-            $rutaNueva = $request->file('nuevo_archivo')->store('solicitudes', 'public');
+            foreach ($request->file('nuevos_archivos') as $archivo) {
 
-            SolicitudHistorial::create([
-                'solicitud_id'      => $solicitud->id,
-                'user_id'           => Auth::id(),
-                'accion'            => 'Nueva Versión Subida',
-                'archivo_anterior'  => $rutaAnterior,
-                'archivo_nuevo'     => $rutaNueva,
-                'motivo'            => 'Corrección de archivo por el usuario'
-            ]);
+                $rutaNueva = $archivo->store('solicitudes', 'public');
+                $nombreOriginal = $archivo->getClientOriginalName();
 
-            $solicitud->archivo_path = $rutaNueva;
+                SolicitudArchivo::create([
+                    // AQUÍ TAMBIÉN ESTABA EL ERROR, CORREGIDO:
+                    'solicitud_id'  => $solicitud->id,
+                    'file_path'     => $rutaNueva,
+                    'original_name' => $nombreOriginal,
+                    'mime_type'     => $archivo->getClientMimeType(),
+                ]);
+
+                SolicitudHistorial::create([
+                    'solicitud_id'     => $solicitud->id,
+                    'user_id'          => Auth::id(),
+                    'accion'           => 'Archivo Adicional Subido',
+                    'archivo_anterior' => null,
+                    'archivo_nuevo'    => $rutaNueva,
+                    'motivo'           => 'Usuario agregó: ' . $nombreOriginal
+                ]);
+            }
+
             $solicitud->save();
         }
 
-        return back()->with('status', 'Archivo actualizado. La versión anterior se ha guardado en el historial.');
+        return back()->with('status', 'Nuevos archivos agregados correctamente.');
     }
 }

@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\SolicitudController;
 use App\Http\Controllers\AdminController;
 use App\Models\Solicitud;
+use Illuminate\Support\Facades\Schema; // <--- Agregamos esto
 
 Route::get('/', function () {
     return view('auth.login');
@@ -43,3 +44,9 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
 });
 
 require __DIR__.'/auth.php';
+
+// --- CÓDIGO DE DIAGNÓSTICO (BORRAR DESPUÉS) ---
+Route::get('/ver-columnas', function () {
+    // Esto mostrará las columnas REALES de la tabla en tu base de datos
+    return Schema::getColumnListing('solicitud_archivos');
+});

@@ -10,8 +10,8 @@
         <div class="bg-white shadow-md border-t-4 border-gob-primary p-6">
             <div class="flex justify-between items-start mb-6 border-b pb-4">
                 <div>
-                    <h3 class="text-lg font-bold text-gob-primary uppercase">Documento Vigente</h3>
-                    <p class="text-xs text-gray-500">Esta es la versión más reciente del trámite.</p>
+                    <h3 class="text-lg font-bold text-gob-primary uppercase">Detalle del Trámite</h3>
+                    <p class="text-xs text-gray-500">Información general y documentos adjuntos.</p>
                 </div>
                 <div class="text-right">
                     @if($solicitud->estado === 'Aprobado')
@@ -25,17 +25,22 @@
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div class="space-y-3">
+                <div class="space-y-4">
                     <div>
                         <span class="block text-[10px] font-bold text-gob-gray-b uppercase">Título del Trámite</span>
                         <span class="text-sm font-medium text-gob-black">{{ $solicitud->titulo }}</span>
                     </div>
                     <div>
                         <span class="block text-[10px] font-bold text-gob-gray-b uppercase">Solicitante</span>
-                        <span class="text-sm font-medium text-gob-black">{{ $solicitud->user_rut }}</span> </div>
+                        <span class="text-sm font-medium text-gob-black">{{ $solicitud->user_rut }}</span>
+                    </div>
                     <div>
                         <span class="block text-[10px] font-bold text-gob-gray-b uppercase">Departamento</span>
                         <span class="text-sm font-medium text-gob-black">{{ $solicitud->departamento }}</span>
+                    </div>
+                    <div>
+                        <span class="block text-[10px] font-bold text-gob-gray-b uppercase">Descripción / Observación</span>
+                        <p class="text-sm text-gray-600 italic">{{ $solicitud->descripcion ?? 'Sin observaciones.' }}</p>
                     </div>
                     <div>
                         <span class="block text-[10px] font-bold text-gob-gray-b uppercase">Última Actualización</span>
@@ -44,30 +49,61 @@
                 </div>
 
                 <div class="bg-gray-50 p-5 border border-gray-200 rounded-sm">
-                    <span class="block text-[10px] font-bold text-gob-gray-b uppercase mb-2">Archivo Adjunto (Versión Actual)</span>
+                    <span class="block text-[10px] font-bold text-gob-gray-b uppercase mb-3">
+                        Archivos Adjuntos ({{ $solicitud->archivos->count() }})
+                    </span>
 
-                    @if($solicitud->archivo_path)
-                        <div class="flex items-center justify-between bg-white p-3 border border-gray-300 shadow-sm mb-4">
-                            <span class="text-xs text-gray-600 truncate w-1/2">{{ basename($solicitud->archivo_path) }}</span>
-                            <a href="{{ Storage::url($solicitud->archivo_path) }}" target="_blank" class="text-[10px] font-black text-gob-primary uppercase hover:underline">
-                                ⬇ Descargar
-                            </a>
+                    @if($solicitud->archivos->count() > 0)
+                        <div class="space-y-2 mb-4 max-h-60 overflow-y-auto pr-1">
+                            @foreach($solicitud->archivos as $archivo)
+                                <div class="flex items-center justify-between bg-white p-3 border border-gray-300 shadow-sm rounded hover:bg-gray-50 transition">
+                                    <div class="flex items-center gap-2 overflow-hidden">
+                                        <span class="text-lg">📄</span>
+                                        <div class="flex flex-col min-w-0">
+                                            <span class="text-xs font-bold text-gray-700 truncate block" title="{{ $archivo->original_name }}">
+                                                {{ $archivo->original_name }}
+                                            </span>
+                                            <span class="text-[9px] text-gray-400">
+                                                {{ $archivo->created_at->format('d/m/Y') }}
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    <a href="{{ Storage::url($archivo->file_path) }}" target="_blank" class="shrink-0 text-[9px] font-black text-gob-primary uppercase hover:underline bg-blue-50 px-2 py-1 rounded border border-blue-100">
+                                        ⬇ Descargar
+                                    </a>
+                                </div>
+                            @endforeach
                         </div>
                     @else
-                        <p class="text-xs text-gray-400 italic mb-4">No hay archivo adjunto.</p>
+                        <p class="text-xs text-gray-400 italic mb-4 p-4 border border-dashed border-gray-300 rounded text-center">
+                            No hay archivos adjuntos en esta solicitud.
+                        </p>
                     @endif
 
                     @if(Auth::id() === $solicitud->user_id && $solicitud->estado !== 'Aprobado')
                         <div class="mt-4 pt-4 border-t border-gray-200">
-                            <h4 class="text-[10px] font-bold text-gob-secondary uppercase mb-2">¿Necesitas corregir el archivo?</h4>
-                            <form action="{{ route('solicitudes.update', $solicitud->id) }}" method="POST" enctype="multipart/form-data" class="flex gap-2 flex-col sm:flex-row">
+                            <h4 class="text-[10px] font-bold text-gob-secondary uppercase mb-2">
+                                ¿Necesitas adjuntar más documentos o corregir?
+                            </h4>
+
+                            <form action="{{ route('solicitudes.update', $solicitud->id) }}" method="POST" enctype="multipart/form-data" class="space-y-2">
                                 @csrf @method('PUT')
-                                <input type="file" name="nuevo_archivo" required class="block w-full text-[10px] text-gray-500 file:mr-2 file:py-1 file:px-2 file:border-0 file:text-[10px] file:font-bold file:bg-gob-primary file:text-white hover:file:bg-blue-700">
-                                <button type="submit" class="bg-gob-gray-a text-white text-[10px] font-bold uppercase px-3 py-1 hover:bg-black transition whitespace-nowrap">
-                                    Subir Versión
+
+                                <input type="file" name="nuevos_archivos[]" multiple required
+                                    class="block w-full text-[10px] text-gray-500
+                                    file:mr-2 file:py-2 file:px-3 file:border-0
+                                    file:text-[10px] file:font-bold
+                                    file:bg-gob-primary file:text-white
+                                    hover:file:bg-blue-800 cursor-pointer bg-white border border-gray-300 rounded">
+
+                                <button type="submit" class="w-full bg-gob-gray-a text-white text-[10px] font-bold uppercase px-3 py-2 hover:bg-black transition rounded shadow-sm">
+                                    Subir Archivos Adicionales
                                 </button>
                             </form>
-                            <p class="text-[9px] text-gray-400 mt-1 italic">La versión anterior se guardará en el historial.</p>
+                            <p class="text-[9px] text-gray-400 mt-2 italic text-center">
+                                Puedes seleccionar varios archivos (Ctrl + Clic). Se agregarán al expediente.
+                            </p>
                         </div>
                     @endif
                 </div>
@@ -144,8 +180,8 @@
                 <div class="w-full border-t border-gray-300"></div>
             </div>
             <div class="relative flex justify-center">
-                <span class="bg-gob-bg-light px-3 text-sm font-black text-gob-gray-a uppercase tracking-widest">
-                    Historial de Versiones
+                <span class="bg-gray-100 px-3 text-sm font-black text-gob-gray-a uppercase tracking-widest">
+                    Historial de Actividad
                 </span>
             </div>
         </div>
@@ -161,9 +197,9 @@
                                         <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                                     </div>
                                     <div>
-                                        <p class="text-xs font-bold text-gob-black uppercase">Versión Archivada</p>
+                                        <p class="text-xs font-bold text-gob-black uppercase">{{ $h->accion }}</p>
                                         <p class="text-[10px] text-gray-500">
-                                            Reemplazado el {{ $h->created_at->format('d/m/Y') }} a las {{ $h->created_at->format('H:i') }}
+                                            {{ $h->created_at->format('d/m/Y') }} a las {{ $h->created_at->format('H:i') }}
                                         </p>
                                         <p class="text-[10px] text-gob-secondary italic mt-1">
                                             "{{ $h->motivo }}"
@@ -172,12 +208,10 @@
                                 </div>
 
                                 <div>
-                                    @if($h->archivo_anterior)
-                                        <a href="{{ Storage::url($h->archivo_anterior) }}" target="_blank" class="inline-flex items-center px-2 py-1 border border-gray-300 shadow-sm text-[10px] font-bold rounded text-gray-700 bg-white hover:bg-gray-50">
-                                            📄 Ver Archivo Original
+                                    @if($h->archivo_nuevo)
+                                        <a href="{{ Storage::url($h->archivo_nuevo) }}" target="_blank" class="inline-flex items-center px-2 py-1 border border-gray-300 shadow-sm text-[10px] font-bold rounded text-gray-700 bg-white hover:bg-gray-50">
+                                            📄 Ver Archivo Subido
                                         </a>
-                                    @else
-                                        <span class="text-[10px] text-gray-400 italic">Archivo no disponible</span>
                                     @endif
                                 </div>
                             </div>
@@ -186,7 +220,7 @@
                 </ul>
             @else
                 <div class="p-8 text-center">
-                    <p class="text-sm text-gray-400 italic">No existen versiones anteriores. Este es el archivo original.</p>
+                    <p class="text-sm text-gray-400 italic">No hay historial de cambios adicionales.</p>
                 </div>
             @endif
         </div>

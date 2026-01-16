@@ -29,7 +29,6 @@ return new class extends Migration
         });
 
         Schema::create('password_reset_tokens', function (Blueprint $table) {
-            // Mantenemos tu lógica de usar RUT para recuperar clave
             $table->string('rut')->primary();
             $table->string('token');
             $table->timestamp('created_at')->nullable();
@@ -38,8 +37,6 @@ return new class extends Migration
         Schema::create('sessions', function (Blueprint $table) {
             $table->string('id')->primary();
 
-            // 3. CORRECCIÓN CRÍTICA: Cambiado de foreignId a string
-            // Esto permite que el sistema guarde el RUT en la sesión sin patearte fuera.
             $table->string('user_id')->nullable()->index();
 
             $table->string('ip_address', 45)->nullable();

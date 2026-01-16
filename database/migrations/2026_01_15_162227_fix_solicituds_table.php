@@ -9,12 +9,10 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('solicituds', function (Blueprint $table) {
-            // Si por alguna razón la columna no existe, la creamos
             if (!Schema::hasColumn('solicituds', 'user_id')) {
                 $table->foreignId('user_id')->nullable()->after('id')->constrained('users')->onDelete('cascade');
             }
 
-            // Aprovechamos de asegurar que 'titulo' y 'archivo_path' existan
             if (!Schema::hasColumn('solicituds', 'titulo')) {
                 $table->string('titulo')->nullable()->after('user_id');
             }

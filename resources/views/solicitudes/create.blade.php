@@ -113,13 +113,11 @@
 
             if(inputArchivos) {
                 inputArchivos.addEventListener('change', function(e) {
-                    // Limpiar lista anterior
                     listaArchivos.innerHTML = '';
 
                     const files = Array.from(inputArchivos.files);
 
                     if (files.length > 0) {
-                        // Título de la lista
                         const titulo = document.createElement('p');
                         titulo.className = 'text-xs font-bold text-gray-500 mb-2 border-b pb-1';
                         titulo.innerText = `Archivos seleccionados (${files.length}):`;
@@ -129,7 +127,6 @@
                             const item = document.createElement('div');
                             item.className = 'flex items-center justify-between p-3 bg-blue-50 border border-blue-100 rounded text-sm text-gray-700 shadow-sm';
 
-                            // Definir icono
                             let icon = '📄';
                             if(file.name.match(/\.(jpg|jpeg|png)$/i)) icon = '🖼️';
                             if(file.name.match(/\.(pdf)$/i)) icon = '📕';

@@ -8,18 +8,17 @@ return new class extends Migration
 {
     public function up(): void
     {
-        // 1. Modificar tabla Users
+
         Schema::table('users', function (Blueprint $table) {
-            $table->string('role')->default('user'); // 'admin' o 'user'
-            $table->boolean('is_active')->default(true); // Para suspender cuentas
+            $table->string('role')->default('user');
+            $table->boolean('is_active')->default(true);
         });
 
-        // 2. Crear tabla Historial
         Schema::create('solicitud_historials', function (Blueprint $table) {
             $table->id();
             $table->foreignId('solicitud_id')->constrained()->onDelete('cascade');
-            $table->foreignId('user_id')->constrained(); // Quien hizo el cambio
-            $table->string('accion'); // Ej: "Archivo Reemplazado"
+            $table->foreignId('user_id')->constrained();
+            $table->string('accion');
             $table->string('archivo_anterior')->nullable();
             $table->string('archivo_nuevo')->nullable();
             $table->text('motivo')->nullable();

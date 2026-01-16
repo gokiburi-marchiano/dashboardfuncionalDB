@@ -12,8 +12,6 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('solicituds', function (Blueprint $table) {
-            // Agregamos la columna user_id y la vinculamos con la tabla users
-            // 'after' es para que quede ordenada visualmente después del ID
             $table->foreignId('user_id')->nullable()->constrained()->onDelete('cascade')->after('id');
         });
     }

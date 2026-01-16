@@ -52,7 +52,6 @@ class SolicitudController extends Controller
                 $ruta = $archivo->store('solicitudes', 'public');
 
                 SolicitudArchivo::create([
-                    // ESTA ERA LA CAUSA DEL ERROR, AHORA ESTÁ CORREGIDO:
                     'solicitud_id'  => $solicitud->id,
                     'file_path'     => $ruta,
                     'original_name' => $archivo->getClientOriginalName(),
@@ -96,7 +95,6 @@ class SolicitudController extends Controller
                 $nombreOriginal = $archivo->getClientOriginalName();
 
                 SolicitudArchivo::create([
-                    // AQUÍ TAMBIÉN ESTABA EL ERROR, CORREGIDO:
                     'solicitud_id'  => $solicitud->id,
                     'file_path'     => $rutaNueva,
                     'original_name' => $nombreOriginal,

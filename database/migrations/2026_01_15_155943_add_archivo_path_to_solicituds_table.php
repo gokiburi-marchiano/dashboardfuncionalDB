@@ -12,7 +12,6 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('solicituds', function (Blueprint $table) {
-            // Aquí agregamos la columna nueva
             $table->string('archivo_path')->nullable()->after('descripcion');
         });
     }

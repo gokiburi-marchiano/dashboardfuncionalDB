@@ -9,8 +9,6 @@ class SolicitudHistorial extends Model
 {
     use HasFactory;
 
-    // Asegúrate de que tu tabla en la base de datos se llame así
-    // (Si en la migración usaste otro nombre, cámbialo aquí)
     protected $table = 'solicitud_historials';
 
     protected $fillable = [

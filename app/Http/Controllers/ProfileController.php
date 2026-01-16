@@ -26,12 +26,8 @@ class ProfileController extends Controller
      */
     public function update(ProfileUpdateRequest $request): RedirectResponse
     {
-        // Rellenamos el modelo con los datos validados (Nombre y RUT)
         $request->user()->fill($request->validated());
 
-        // ELIMINADO: La lógica de isDirty('email') o isDirty('rut') que reseteaba la verificación.
-        // En un sistema basado en RUT para una intranet institucional, no solemos requerir
-        // re-verificación por correo electrónico.
 
         $request->user()->save();
 

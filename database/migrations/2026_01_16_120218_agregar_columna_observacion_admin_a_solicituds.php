@@ -12,7 +12,6 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('solicituds', function (Blueprint $table) {
-            // Verificamos si la columna no existe antes de crearla para evitar errores
             if (!Schema::hasColumn('solicituds', 'observacion_admin')) {
                 $table->text('observacion_admin')->nullable()->after('estado');
             }
